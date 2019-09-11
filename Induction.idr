@@ -2,38 +2,54 @@ module Induction
 
 %default total
 
+||| Perform substitution in a term according to some equality.
+preludeReplace : {a:_} -> {x:_} -> {y:_} -> {P : a -> Type} -> x = y -> P x -> P y
+preludeReplace Refl prf = prf
+
+||| Perform substitution in a term according to some equality.
+|||
+||| Like `replace`, but with an explicit predicate, and applying the
+||| rewrite in the other direction, which puts it in a form usable by
+||| the `rewrite` tactic and term.
+preludeRewrite__impl : (P : a -> Type) -> x = y -> P y -> P x
+preludeRewrite__impl p Refl prf = prf
+
 symmetry : (a = b) -> (b = a)
 symmetry Refl = Refl
 
 p1: Nat -> Type
-p1 x = (x = 2)
+p1 a = (a = 2)
+
+ourReplace : {P : t -> Type} -> x = y -> P x -> P y
+ourReplace Refl x = x
 
 testReplace : (x = y) -> (p1 x) -> (p1 y)
 testReplace prf x = replace prf x
 
-rewrite_ : (P : a -> Type) -> (x = y) -> P y -> P x
-rewrite_ P Refl prf2 = prf2
+ourRewrite : (P : a -> Type) -> (x = y) -> P y -> P x
+ourRewrite P Refl prf2 = prf2
 
 testRewrite0: (x = y) -> (p1 y) -> (p1 x)
-testRewrite0 prf a = rewrite_ p1 prf a
+testRewrite0 prf a = ourRewrite p1 prf a
 
 testRewrite1: (x = y) -> (p1 y) -> (p1 x)
 testRewrite1 prf a = replace a prf -- Using replace
 
-testRewrite2: (x = y) -> (p1 y) -> (p1 x)
-testRewrite2 prf a = rewrite prf in a
+testRewrite1a: (x = y) -> (p1 x) -> (p1 y)
+testRewrite1a prf a = replace prf a -- replace in other direction.
 
-testRewrite3: (x = y) -> (p1 x) -> (p1 y)
-testRewrite3 prf a = rewrite (sym prf) in a
+testRewriteY2X: (x = y) -> (p1 y) -> (p1 x)
+testRewriteY2X prf a = rewrite prf in ?hole1
 
-testRewrite3a: (x = y) -> (p1 x) -> (p1 y)
-testRewrite3a prf a = rewrite (sym prf) in ?hole
+testRewriteX2Y: (x = y) -> (p1 x) -> (p1 y)
+testRewriteX2Y prf a = rewrite (sym prf) in ?hole2
 
-testRewrite4: (x = y) -> (p1 y) -> (p1 x)
-testRewrite4 Refl prf2 = prf2
+testReflX2YRefl: (x = y) -> (p1 x) -> (p1 y)
+testReflX2YRefl Refl a = a
 
-testRewrite5: (x = y) -> (p1 x) -> (p1 y)
-testRewrite5 Refl prf2 = prf2
+-- Reverse of testRewritey to x.
+testReflY2X: (x = y) -> (p1 y) -> (p1 x)
+testReflY2X Refl a = a
 
 namespace Replace1
   ||| Perform substitution in a term according to some equality.
@@ -45,11 +61,25 @@ namespace Replace2
   replace : {P : t -> Type} -> x = y -> P x -> P y
   replace Refl prf = prf
 
-plusReducesR : (n : Nat) -> n = plus n 0
+preludePlusZeroRightNeutral2 : (left : Nat) -> left + 0 = left
+preludePlusZeroRightNeutral2 Z     = Refl
+preludePlusZeroRightNeutral2 (S n) =
+  let inductiveHypothesis = preludePlusZeroRightNeutral2 n in
+    rewrite inductiveHypothesis in Refl
+
+plusZeroRightIdentity : (n : Nat) -> n + 0 = n
+plusZeroRightIdentity Z = Refl
+plusZeroRightIdentity (S k) =
+  let ih = plusZeroRightIdentity k
+  in rewrite ih in Refl
+
+plusReducesR : (n : Nat) -> n = plus n Z
 plusReducesR Z = Refl
 plusReducesR (S k) =
-  let ih = plusReducesR k
-  in ?plusReduces_hole1
+  let
+    ih = plusReducesR k
+    symIH = sym ih
+  in rewrite symIH in Refl
 
 namespace Eq1
   plusSucc : (k, j : Nat) -> (k + S j = S (k + j))
