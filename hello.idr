@@ -18,6 +18,8 @@ data Bar = Bar1 | Bar2
 
 
 barify : Foo -> Bar
+barify Foo1 = Bar1
+barify Foo2 = Bar1
 
 
 
