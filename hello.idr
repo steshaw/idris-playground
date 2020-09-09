@@ -1,4 +1,33 @@
 module Main
 
+
+foo : IO ()
+foo = putStrLn "foo"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 main : IO ()
-main = putStrLn "Hello world"
+main = do
+    foo
+    putStrLn "Hello world"
